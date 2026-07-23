@@ -22,13 +22,20 @@ const COOKIE_NAME = 'simenu_token';
  * me" behavior.
  */
 function setAuthCookie(res, token, maxAgeMs) {
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    ...(maxAgeMs ? { maxAge: maxAgeMs } : {}),
-  });
-}
+     const isProduction = process.env.NODE_ENV === 'production';
+     res.cookie(COOKIE_NAME, token, {
+       httpOnly: true,
+       secure: isProduction,
+       // 'none' is required for the cookie to survive a request between two
+       // different domains (your Vercel frontend calling your Render
+       // backend) — browsers require 'secure: true' whenever 'none' is used,
+       // which is already guaranteed above since both are only true in
+       // production. Locally, both frontend and backend share "localhost",
+       // so 'lax' remains correct there.
+       sameSite: isProduction ? 'none' : 'lax',
+       ...(maxAgeMs ? { maxAge: maxAgeMs } : {}),
+     });
+   }
 
 /**
  * POST /api/auth/register
